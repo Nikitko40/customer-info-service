@@ -1,0 +1,6 @@
+
+.idea/
+.target/
+# Project exclude paths
+/database/target/
+/service/target/
