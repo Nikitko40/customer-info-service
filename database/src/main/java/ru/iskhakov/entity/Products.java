@@ -2,12 +2,14 @@ package ru.iskhakov.entity;
 
 import java.math.BigDecimal;
 
-public class Goods {
+public class Products {
 
+    private long product_id;
     private String productName;
     private BigDecimal price;
 
-    public Goods(String productName, BigDecimal price) {
+    public Products(long product_id, String productName, BigDecimal price) {
+        this.product_id = product_id;
         this.productName = productName;
         this.price = price;
     }

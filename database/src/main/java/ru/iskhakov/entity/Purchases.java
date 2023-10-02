@@ -4,30 +4,32 @@ import java.util.Date;
 
 public class Purchases {
 
-    private Customers customers;
-    private Goods goods;
+    private long purchase_id;
+    private Customers customer;
+    private Products product;
     private Date purchaseDate;
 
-    public Purchases(Customers customers, Goods goods, Date purchaseDate) {
-        this.customers = customers;
-        this.goods = goods;
+    public Purchases(long purchase_id, Customers customer, Products product, Date purchaseDate) {
+        this.purchase_id = purchase_id;
+        this.customer = customer;
+        this.product = product;
         this.purchaseDate = purchaseDate;
     }
 
-    public Customers getCustomers() {
-        return customers;
+    public Customers getCustomer() {
+        return customer;
     }
 
-    public void setCustomers(Customers customers) {
-        this.customers = customers;
+    public void setCustomer(Customers customer) {
+        this.customer = customer;
     }
 
-    public Goods getGoods() {
-        return goods;
+    public Products getGoods() {
+        return product;
     }
 
-    public void setGoods(Goods goods) {
-        this.goods = goods;
+    public void setGoods(Products products) {
+        this.product = products;
     }
 
     public Date getPurchaseDate() {
