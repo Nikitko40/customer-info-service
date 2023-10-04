@@ -1,16 +1,11 @@
 package ru.iskhakov.entity;
 
+import java.util.Objects;
+
 public class Customers {
 
-    private  long customer_id;
     private String firstName;
     private String lastName;
-
-    public Customers(long customer_id, String firstName, String lastName) {
-        this.customer_id = customer_id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-    }
 
     public Customers(String firstName, String lastName) {
         this.firstName = firstName;
@@ -31,5 +26,18 @@ public class Customers {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Customers customers = (Customers) o;
+        return Objects.equals(firstName, customers.firstName) && Objects.equals(lastName, customers.lastName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(firstName, lastName);
     }
 }

@@ -1,38 +1,38 @@
-package ru.iskhakov;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-/**
- * Unit test for simple App.
- */
-public class CustomerInfoServiceApplicationTest
-    extends TestCase
-{
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public CustomerInfoServiceApplicationTest(String testName )
-    {
-        super( testName );
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( CustomerInfoServiceApplicationTest.class );
-    }
-
-    /**
-     * Rigourous Test :-)
-     */
-    public void testApp()
-    {
-        assertTrue( true );
-    }
-}
+//package ru.iskhakov;
+//
+//import junit.framework.Test;
+//import junit.framework.TestCase;
+//import junit.framework.TestSuite;
+//
+///**
+// * Unit test for simple App.
+// */
+//public class CustomerInfoServiceApplicationTest
+//    extends TestCase
+//{
+//    /**
+//     * Create the test case
+//     *
+//     * @param testName name of the test case
+//     */
+//    public CustomerInfoServiceApplicationTest(String testName )
+//    {
+//        super( testName );
+//    }
+//
+//    /**
+//     * @return the suite of tests being tested
+//     */
+//    public static Test suite()
+//    {
+//        return new TestSuite( CustomerInfoServiceApplicationTest.class );
+//    }
+//
+//    /**
+//     * Rigourous Test :-)
+//     */
+//    public void testApp()
+//    {
+//        assertTrue( true );
+//    }
+//}
