@@ -1,7 +1,6 @@
 package ru.iskhakov.entity;
 
 import java.util.Date;
-import java.util.Objects;
 
 public class Purchases {
 
@@ -45,18 +44,5 @@ public class Purchases {
 
     public void setPurchaseDate(Date purchaseDate) {
         this.purchaseDate = purchaseDate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Purchases purchases = (Purchases) o;
-        return Objects.equals(customer, purchases.customer) && Objects.equals(product, purchases.product) && Objects.equals(purchaseDate, purchases.purchaseDate);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(customer, product, purchaseDate);
     }
 }

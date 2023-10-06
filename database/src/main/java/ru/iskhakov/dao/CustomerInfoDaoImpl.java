@@ -4,22 +4,26 @@ package ru.iskhakov.dao;
 import org.jetbrains.annotations.NotNull;
 import ru.iskhakov.entity.Customers;
 import ru.iskhakov.entity.CustomersStat;
-import ru.iskhakov.entity.Products;
-import ru.iskhakov.entity.Stat;
+import ru.iskhakov.entity.PurchaseStat;
+import ru.iskhakov.entity.Statistic;
 import ru.iskhakov.exception.DaoException;
 import ru.iskhakov.util.ConnectionManager;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CustomerInfoDaoImpl implements CustomerInfoDao {
 
@@ -89,81 +93,115 @@ public class CustomerInfoDaoImpl implements CustomerInfoDao {
     }
 
     @Override
-    public List<Customers> findCustomersOnProductSalesCount(@NotNull String productName, @NotNull BigDecimal numberOfSales) throws DaoException {
+    public List<Customers> findCustomersOnProductSalesCount(@NotNull String productName, int numberOfSales) {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_CUSTOMERS_ON_PRODUCT_SALES_COUNT_SQL)) {
             preparedStatement.setString(1, productName);
-            preparedStatement.setBigDecimal(2, numberOfSales);
+            preparedStatement.setInt(2, numberOfSales);
             return getCustomers(preparedStatement);
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Customers> findCustomersOnCostRange(@NotNull BigDecimal minExpenses, @NotNull BigDecimal maxExpenses) throws DaoException {
+    public List<Customers> findCustomersOnCostRange(@NotNull BigDecimal minExpenses, @NotNull BigDecimal maxExpenses) {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_CUSTOMERS_ON_PRODUCT_EXPENSES_SQL)) {
             preparedStatement.setBigDecimal(1, minExpenses);
             preparedStatement.setBigDecimal(2, maxExpenses);
             return getCustomers(preparedStatement);
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Customers> findCustomerWithTheLeastNumberOfPurchases(@NotNull int customersNumber) throws DaoException {
+    public List<Customers> findCustomerWithTheLeastNumberOfPurchases(int customersNumber) {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_CUSTOMER_WITH_THE_LEAST_NUMBER_OF_PURCHASES_SQL)) {
             preparedStatement.setInt(1, customersNumber);
             return getCustomers(preparedStatement);
         } catch (SQLException e) {
-            throw new DaoException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Stat findCustomersStatisticsOnGivenDate(@NotNull Date startDate, @NotNull Date endDate) {
+    public Statistic findCustomersStatisticsOnGivenDate(@NotNull Date startDate, @NotNull Date endDate) {
         try (Connection connection = ConnectionManager.open();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_CUSTOMERS_STATISTICS_ON_GIVEN_DATE_SQL)) {
-            preparedStatement.setDate(1, startDate);
-            preparedStatement.setDate(2, endDate);
-            preparedStatement.setDate(3, startDate);
-            preparedStatement.setDate(4, endDate);
+            preparedStatement.setDate(1, convert(startDate));
+            preparedStatement.setDate(2, convert(endDate));
+            preparedStatement.setDate(3, convert(startDate));
+            preparedStatement.setDate(4, convert(endDate));
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            Stat stat = new Stat();
-            List<CustomersStat> customersStats = new ArrayList<>();
-            List<Products> products = new ArrayList<>();
-            int totalDays = 0;
+
+            Integer totalDays = null;
+            Set<CustomersStat> customers = new HashSet<>();
+            Map<String, List<PurchaseStat>> maps = new HashMap<>();
+            String name;
             while (resultSet.next()) {
-                CustomersStat customersStat = new CustomersStat();
-                String firstName = resultSet.getString(FIRST_NAME);
-                String lastName = resultSet.getString(LAST_NAME);
-                String product_name = resultSet.getString("product_name");
+                String firstName = resultSet.getString("first_name");
+                String lastName = resultSet.getString("last_name");
+                String productName = resultSet.getString("product_name");
                 BigDecimal expenses = resultSet.getBigDecimal("sum");
-                if (totalDays == 0) {
+                if (totalDays == null) {
                     totalDays = resultSet.getInt("totalDays");
                 }
-                customersStat.setFirstName(firstName);
-                customersStat.setLastName(lastName);
-                products.add(new Products(product_name, expenses));
-                customersStat.setProducts(products);
-                BigDecimal totalExpenses = products.stream()
-                        .map(Products::getPrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal averageExpenses = products.stream()
-                        .map(Products::getPrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(BigDecimal.valueOf(products.size()), 2, RoundingMode.HALF_UP);
-                stat.setTotalDays(totalDays);
-                stat.setAvgExpenses(averageExpenses);
-                stat.setTotalExpenses(totalExpenses);
-                customersStats.add(customersStat);
-                stat.setCustomers(customersStats);
+                name = lastName + " " + firstName;
+
+                List<PurchaseStat> purchase = maps.get(name);
+                if (purchase == null || purchase.isEmpty()) {
+                    List<PurchaseStat> newPurchase = new ArrayList<>();
+                    newPurchase.add(PurchaseStat.builder()
+                            .expenses(expenses)
+                            .name(productName)
+                            .build());
+                    maps.put(name, newPurchase);
+                } else {
+                    purchase.add(PurchaseStat.builder()
+                            .name(productName)
+                            .expenses(expenses)
+                            .build());
+                    maps.put(name, purchase);
+                }
+                customers.add(CustomersStat.builder().name(name).build());
             }
-            return stat;
+
+            if (customers.isEmpty()) {
+                return Statistic.builder().build();
+            }
+
+            List<CustomersStat> allCustomers = customers.stream()
+                    .map(el -> {
+                        List<PurchaseStat> purchaseStats = maps.get(el.getName());
+                        el.setPurchases(purchaseStats);
+                        return el;
+                    }).collect(Collectors.toList());
+
+            List<CustomersStat> updateCustomers = allCustomers.stream()
+                    .map(el -> {
+                        BigDecimal allPurchase = BigDecimal.ZERO;
+                        for (PurchaseStat stat : el.getPurchases()) {
+                            allPurchase = allPurchase.add(stat.getExpenses());
+                        }
+                        el.setTotalExpenses(allPurchase);
+                        return el;
+                    }).collect(Collectors.toList());
+
+            List<BigDecimal> expenses = updateCustomers.stream()
+                    .map(p -> p.getTotalExpenses())
+                    .collect(Collectors.toList());
+
+            return Statistic.builder()
+                    .totalDays(totalDays)
+                    .customers(updateCustomers)
+                    .totalExpenses(expenses.stream().reduce(BigDecimal.ZERO, BigDecimal::add))
+                    .avgExpenses(average(expenses, RoundingMode.CEILING))
+                    .build();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -180,4 +218,19 @@ public class CustomerInfoDaoImpl implements CustomerInfoDao {
         return customers;
     }
 
+    public static java.sql.Date convert(java.util.Date date) {
+        return new java.sql.Date(date.getTime());
+    }
+
+    public BigDecimal average(List<BigDecimal> bigDecimals, RoundingMode roundingMode) {
+        BigDecimal sum = bigDecimals.stream()
+                .map(Objects::requireNonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return sum.divide(new BigDecimal(bigDecimals.size()), roundingMode);
+    }
+
+    public static void main(String[] args) {
+        CustomerInfoDaoImpl customerInfoDao = new CustomerInfoDaoImpl();
+
+    }
 }
