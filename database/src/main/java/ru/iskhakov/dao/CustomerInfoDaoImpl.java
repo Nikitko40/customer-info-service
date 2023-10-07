@@ -229,8 +229,4 @@ public class CustomerInfoDaoImpl implements CustomerInfoDao {
         return sum.divide(new BigDecimal(bigDecimals.size()), roundingMode);
     }
 
-    public static void main(String[] args) {
-        CustomerInfoDaoImpl customerInfoDao = new CustomerInfoDaoImpl();
-
-    }
 }
