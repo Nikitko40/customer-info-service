@@ -1,0 +1,18 @@
+{
+	"criterias": [
+		{
+			"lastName": "Sidorov"
+		},
+		{
+			"productName": "Mineral water",
+			"minTimes": 2
+		},
+		{
+			"minExpenses": 110,
+			"maxExpenses": 100000
+		},
+		{
+			"badCustomers": 3
+		}
+	]
+}
